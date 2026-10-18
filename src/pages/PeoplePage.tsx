@@ -38,7 +38,11 @@ export function PeoplePage() {
     )
   }
 
-  if (!rows.length && !browse.loading) {
+  if (!browse.snapshot) {
+    return null
+  }
+
+  if (!rows.length && !query.trim()) {
     return (
       <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
         No one has material purchases or sales at two or more companies in this window.

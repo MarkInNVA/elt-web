@@ -17,7 +17,11 @@ async function postJson<T>(path: string, body: unknown, parse: (data: unknown) =
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      // text/plain is a CORS-safelisted content type, so the browser skips the
+      // preflight. API Gateway forwards OPTIONS to the Lambda, which answers 405,
+      // and that aborts any application/json POST before it leaves the browser.
+      // The lake parses the body as JSON regardless of content type.
+      headers: { 'Content-Type': 'text/plain', Accept: 'application/json' },
       body: JSON.stringify(body),
       signal: controller.signal,
     })

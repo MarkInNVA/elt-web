@@ -76,7 +76,7 @@ export function AppShell({ browse }: { browse: BrowseState }) {
         </Tabs>
       </AppBar>
       <Container maxWidth="md" sx={{ py: 2, flex: 1 }}>
-        {browse.errorMessage && (
+        {browse.errorMessage && !browse.loading && (
           <Alert severity="warning" sx={{ mb: 2 }}>{browse.errorMessage}</Alert>
         )}
         <Outlet context={browse} />

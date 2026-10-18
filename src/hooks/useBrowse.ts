@@ -32,6 +32,7 @@ export function useBrowse(): BrowseState {
 
   const refresh = useCallback(async () => {
     setLoading(true)
+    setErrorMessage(null)
     const result = await refreshSnapshot(windowDays, snapshotRef.current)
     setSnapshot(result.snapshot)
     setErrorMessage(result.errorMessage)
@@ -52,6 +53,7 @@ export function useBrowse(): BrowseState {
       localStorage.setItem(WINDOW_KEY, String(days))
       setWindowDaysState(days)
       setLoading(true)
+      setErrorMessage(null)
       const result = await refreshSnapshot(days, null)
       setSnapshot(result.snapshot)
       setErrorMessage(result.errorMessage)

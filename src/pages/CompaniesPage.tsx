@@ -45,7 +45,11 @@ export function CompaniesPage() {
     )
   }
 
-  if (!browse.snapshot?.issuers.length && !browse.loading) {
+  if (!browse.snapshot) {
+    return null
+  }
+
+  if (!browse.snapshot.issuers.length) {
     return (
       <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
         No material purchases or sales in this window.
