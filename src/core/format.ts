@@ -25,6 +25,17 @@ function compact(value: number): string {
   return value.toFixed(1)
 }
 
+export function codeLabel(code?: string | null): string {
+  switch (code) {
+    case 'P':
+      return 'Purchase'
+    case 'S':
+      return 'Sale'
+    default:
+      return code ?? 'Trade'
+  }
+}
+
 export function activity(buys: number, sells: number): string {
   const parts: string[] = []
   if (buys > 0) parts.push(`${buys} ${buys === 1 ? 'buy' : 'buys'}`)

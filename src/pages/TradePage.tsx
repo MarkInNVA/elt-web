@@ -4,14 +4,69 @@ import {
   Link as MuiLink,
   List,
   ListItem,
-  ListItemText,
   Typography,
 } from '@mui/material'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { describeApiError } from '../core/api'
-import { money } from '../core/format'
+import { codeLabel, money } from '../core/format'
+import { paletteMain, transactionColor } from '../core/tradeColors'
 import type { BrowseState } from '../hooks/useBrowse'
 import { useTrades } from '../hooks/useTrades'
+import type { TransactionRow } from '../core/types'
+
+function TradeRow({
+  headline,
+  row,
+}: {
+  headline: string
+  row: TransactionRow
+}) {
+  const detailParts = [
+    row.transaction_date ?? row.filing_date,
+    codeLabel(row.code),
+    row.security,
+    row.owner_position,
+  ].filter((part) => part != null && String(part).length > 0)
+
+  return (
+    <ListItem alignItems="flex-start" sx={{ display: 'block', py: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle1" component="div" fontWeight={600}>
+            {headline}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {detailParts.join(' · ')}
+          </Typography>
+          {row.filing_url ? (
+            <MuiLink
+              href={row.filing_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="caption"
+              sx={{ display: 'inline-block', mt: 0.5 }}
+            >
+              Filing
+            </MuiLink>
+          ) : null}
+        </Box>
+        {row.value != null ? (
+          <Typography
+            variant="body1"
+            sx={{
+              fontWeight: 600,
+              fontVariantNumeric: 'tabular-nums',
+              flexShrink: 0,
+              color: paletteMain(transactionColor(row.code)),
+            }}
+          >
+            {money(row.value)}
+          </Typography>
+        ) : null}
+      </Box>
+    </ListItem>
+  )
+}
 
 export function IssuerTradePage() {
   const { ticker = '' } = useParams()
@@ -54,27 +109,13 @@ export function IssuerTradePage() {
       {rows.length === 0 ? (
         <Typography color="text.secondary">No trades in this window.</Typography>
       ) : (
-        <List>
+        <List disablePadding>
           {rows.map((row, index) => (
-            <ListItem key={`${row.accession}-${index}`} alignItems="flex-start">
-              <ListItemText
-                primary={`${row.code ?? '?'} · ${money(row.value ?? 0)}`}
-                secondary={
-                  <>
-                    {row.transaction_date ?? row.filing_date}
-                    {row.owner_name ? ` · ${row.owner_name}` : ''}
-                    {row.filing_url ? (
-                      <>
-                        {' · '}
-                        <MuiLink href={row.filing_url} target="_blank" rel="noopener noreferrer">
-                          Filing
-                        </MuiLink>
-                      </>
-                    ) : null}
-                  </>
-                }
-              />
-            </ListItem>
+            <TradeRow
+              key={`${row.accession}-${index}`}
+              headline={row.owner_name ?? row.owner_cik ?? row.ticker}
+              row={row}
+            />
           ))}
         </List>
       )}
@@ -125,26 +166,13 @@ export function PersonTradePage() {
       {rows.length === 0 ? (
         <Typography color="text.secondary">No trades in this window.</Typography>
       ) : (
-        <List>
+        <List disablePadding>
           {rows.map((row, index) => (
-            <ListItem key={`${row.accession}-${index}`} alignItems="flex-start">
-              <ListItemText
-                primary={`${row.ticker} · ${row.code ?? '?'} · ${money(row.value ?? 0)}`}
-                secondary={
-                  <>
-                    {row.transaction_date ?? row.filing_date}
-                    {row.filing_url ? (
-                      <>
-                        {' · '}
-                        <MuiLink href={row.filing_url} target="_blank" rel="noopener noreferrer">
-                          Filing
-                        </MuiLink>
-                      </>
-                    ) : null}
-                  </>
-                }
-              />
-            </ListItem>
+            <TradeRow
+              key={`${row.accession}-${index}`}
+              headline={row.ticker}
+              row={row}
+            />
           ))}
         </List>
       )}

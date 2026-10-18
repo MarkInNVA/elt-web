@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { activity, money } from '../core/format'
 import { groupTotals, sectorGroups } from '../core/sectors'
+import { netColor, paletteMain } from '../core/tradeColors'
 import { displayNet } from '../core/types'
 import type { BrowseState } from '../hooks/useBrowse'
 
@@ -93,12 +94,30 @@ export function CompaniesPage() {
                 <ListItemButton onClick={() => toggle(group.id)} sx={{ pr: 6 }}>
                   <ListItemText
                     primary={group.name}
-                    secondary={`${group.rows.length} companies · P ${money(totals.buyValue)} · S ${money(totals.sellValue)} · ${activity(totals.buyTxn, totals.sellTxn)}`}
+                    secondary={
+                      <Typography component="span" variant="body2" color="text.secondary">
+                        {group.rows.length} companies ·{' '}
+                        <Box component="span" sx={{ color: 'success.main', fontWeight: 600 }}>
+                          P {money(totals.buyValue)}
+                        </Box>
+                        {' · '}
+                        <Box component="span" sx={{ color: 'error.main', fontWeight: 600 }}>
+                          S {money(totals.sellValue)}
+                        </Box>
+                        {' · '}
+                        {activity(totals.buyTxn, totals.sellTxn)}
+                      </Typography>
+                    }
                   />
                   <Typography
                     variant="body2"
-                    color={totals.net < 0 ? 'error.main' : 'success.main'}
-                    sx={{ ml: 1, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
+                    sx={{
+                      ml: 1,
+                      fontWeight: 600,
+                      fontVariantNumeric: 'tabular-nums',
+                      flexShrink: 0,
+                      color: paletteMain(netColor(totals.net)),
+                    }}
                   >
                     {money(totals.net)}
                   </Typography>
@@ -121,8 +140,11 @@ export function CompaniesPage() {
                         />
                         <Typography
                           variant="body2"
-                          color={displayNet(row) < 0 ? 'error.main' : 'success.main'}
-                          sx={{ fontWeight: 600 }}
+                          sx={{
+                            fontWeight: 600,
+                            fontVariantNumeric: 'tabular-nums',
+                            color: paletteMain(netColor(displayNet(row))),
+                          }}
                         >
                           {money(displayNet(row))}
                         </Typography>

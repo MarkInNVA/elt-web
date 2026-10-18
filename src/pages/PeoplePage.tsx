@@ -11,6 +11,7 @@ import {
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { money } from '../core/format'
+import { netColor, paletteMain } from '../core/tradeColors'
 import { displayNet } from '../core/types'
 import type { BrowseState } from '../hooks/useBrowse'
 
@@ -73,8 +74,11 @@ export function PeoplePage() {
               />
               <Typography
                 variant="body2"
-                color={displayNet(row) < 0 ? 'error.main' : 'success.main'}
-                sx={{ fontWeight: 600 }}
+                sx={{
+                  fontWeight: 600,
+                  fontVariantNumeric: 'tabular-nums',
+                  color: paletteMain(netColor(displayNet(row))),
+                }}
               >
                 {money(displayNet(row))}
               </Typography>
