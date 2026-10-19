@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import { useMemo, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { activity, money } from '../core/format'
+import { activity, filingRangeLabel, money } from '../core/format'
 import { groupTotals, sectorGroups } from '../core/sectors'
 import { netColor, paletteMain } from '../core/tradeColors'
 import { displayNet } from '../core/types'
@@ -27,7 +27,7 @@ export function CompaniesPage() {
 
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const issuers = browse.snapshot?.issuers ?? []
+    const issuers = browse.displayed?.issuers ?? []
     const filtered = q
       ? issuers.filter(
           (r) =>
@@ -36,9 +36,9 @@ export function CompaniesPage() {
         )
       : issuers
     return sectorGroups(filtered)
-  }, [browse.snapshot?.issuers, query])
+  }, [browse.displayed?.issuers, query])
 
-  if (browse.loading && !browse.snapshot) {
+  if (browse.loading && !browse.displayed) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
         <CircularProgress />
@@ -46,11 +46,11 @@ export function CompaniesPage() {
     )
   }
 
-  if (!browse.snapshot) {
+  if (!browse.displayed) {
     return null
   }
 
-  if (!browse.snapshot.issuers.length) {
+  if (!browse.displayed.issuers.length) {
     return (
       <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
         No material purchases or sales in this window.
@@ -125,7 +125,9 @@ export function CompaniesPage() {
               </ListItem>
               <Collapse in={!isCollapsed}>
                 <List dense disablePadding>
-                  {group.rows.map((row) => (
+                  {group.rows.map((row) => {
+                    const filed = filingRangeLabel(row.first_filed, row.last_filed)
+                    return (
                     <ListItem key={row.ticker} disablePadding>
                       <ListItemButton component={Link} to={`/issuer/${encodeURIComponent(row.ticker)}`}>
                         <ListItemText
@@ -135,6 +137,12 @@ export function CompaniesPage() {
                               {row.company}
                               <br />
                               {activity(row.buy_txn_count ?? 0, row.sell_txn_count ?? 0)}
+                              {filed && (
+                                <>
+                                  <br />
+                                  {filed}
+                                </>
+                              )}
                             </>
                           }
                         />
@@ -150,7 +158,8 @@ export function CompaniesPage() {
                         </Typography>
                       </ListItemButton>
                     </ListItem>
-                  ))}
+                    )
+                  })}
                 </List>
               </Collapse>
             </Box>

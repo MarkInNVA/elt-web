@@ -21,7 +21,7 @@ export function PeoplePage() {
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
-    const people = browse.snapshot?.people ?? []
+    const people = browse.displayed?.people ?? []
     if (!q) return people
     return people.filter(
       (r) =>
@@ -29,9 +29,9 @@ export function PeoplePage() {
         r.owner_cik.includes(q) ||
         (r.tickers?.some((t) => t.toLowerCase().includes(q)) ?? false),
     )
-  }, [browse.snapshot?.people, query])
+  }, [browse.displayed?.people, query])
 
-  if (browse.loading && !browse.snapshot) {
+  if (browse.loading && !browse.displayed) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
         <CircularProgress />
@@ -39,7 +39,7 @@ export function PeoplePage() {
     )
   }
 
-  if (!browse.snapshot) {
+  if (!browse.displayed) {
     return null
   }
 

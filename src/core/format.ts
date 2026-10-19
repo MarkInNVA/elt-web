@@ -1,3 +1,39 @@
+import { format, isValid, parseISO } from 'date-fns'
+
+function parseFilingDay(iso?: string | null): Date | null {
+  if (!iso?.trim()) return null
+  const day = parseISO(iso.slice(0, 10))
+  return isValid(day) ? day : null
+}
+
+/** Human label for issuer preview `first_filed` / `last_filed` (filing dates). */
+export function filingRangeLabel(
+  first?: string | null,
+  last?: string | null,
+): string | null {
+  const start = parseFilingDay(first)
+  const end = parseFilingDay(last)
+  const single = start ?? end
+  if (!single) return null
+
+  const rangeEnd = end ?? start
+  const rangeStart = start ?? end
+  if (!rangeStart || !rangeEnd || rangeStart.getTime() === rangeEnd.getTime()) {
+    return `Filed (range): ${format(single, 'MMM d, yyyy')}`
+  }
+
+  if (
+    rangeStart.getFullYear() === rangeEnd.getFullYear() &&
+    rangeStart.getMonth() === rangeEnd.getMonth()
+  ) {
+    return `Filed (range): ${format(rangeStart, 'MMM d')} – ${format(rangeEnd, 'd, yyyy')}`
+  }
+  if (rangeStart.getFullYear() === rangeEnd.getFullYear()) {
+    return `Filed (range): ${format(rangeStart, 'MMM d')} – ${format(rangeEnd, 'MMM d, yyyy')}`
+  }
+  return `Filed (range): ${format(rangeStart, 'MMM d, yyyy')} – ${format(rangeEnd, 'MMM d, yyyy')}`
+}
+
 export function money(value: number): string {
   const amount = Math.abs(value)
   let text: string

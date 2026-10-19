@@ -7,6 +7,17 @@ export interface SectorGroup {
   rows: IssuerBuySellRow[]
 }
 
+/** ISO filing day for sort; missing dates sort last when descending. */
+export function compareFilingDayDesc(a?: string | null, b?: string | null): number {
+  const key = (iso?: string | null) => iso?.trim().slice(0, 10) ?? ''
+  const ak = key(a)
+  const bk = key(b)
+  if (!ak && !bk) return 0
+  if (!ak) return 1
+  if (!bk) return -1
+  return bk.localeCompare(ak)
+}
+
 export function sectorGroups(issuers: IssuerBuySellRow[]): SectorGroup[] {
   const map = new Map<string, IssuerBuySellRow[]>()
   for (const row of issuers) {
@@ -20,6 +31,8 @@ export function sectorGroups(issuers: IssuerBuySellRow[]): SectorGroup[] {
     const sorted = [...rows].sort((a, b) => {
       const net = displayNet(b) - displayNet(a)
       if (net !== 0) return net
+      const filed = compareFilingDayDesc(a.last_filed, b.last_filed)
+      if (filed !== 0) return filed
       return a.ticker.localeCompare(b.ticker)
     })
     groups.push({ id: name, name, rows: sorted })

@@ -20,7 +20,7 @@ import type { BrowseState } from '../hooks/useBrowse'
 export function AppShell({ browse }: { browse: BrowseState }) {
   const location = useLocation()
   const tab = location.pathname.startsWith('/people') ? 1 : 0
-  const snapshot = browse.snapshot
+  const snapshot = browse.displayed
   const lag = snapshot ? lagLookbackNote(snapshot) : null
 
   return (
@@ -35,7 +35,7 @@ export function AppShell({ browse }: { browse: BrowseState }) {
             size="small"
             value={browse.windowDays}
             onChange={(_, value) => {
-              if (value != null) void browse.setWindowDays(value)
+              if (value != null) browse.setWindowDays(value)
             }}
             aria-label="Recent window"
           >

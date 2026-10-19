@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { refreshSnapshot } from '../core/browse'
 import { LAKE_SCOPE, type WindowDays } from '../core/lakeScope'
 import type { Snapshot } from '../core/types'
@@ -13,10 +13,19 @@ function readStoredWindow(): WindowDays {
   return LAKE_SCOPE.defaultWindow
 }
 
+function displayedSnapshot(
+  snapshot: Snapshot | null,
+  windowDays: WindowDays,
+): Snapshot | null {
+  if (!snapshot || snapshot.windowDays !== windowDays) return null
+  return snapshot
+}
+
 export type BrowseState = {
   windowDays: WindowDays
-  setWindowDays: (days: WindowDays) => Promise<void>
-  snapshot: Snapshot | null
+  setWindowDays: (days: WindowDays) => void
+  /** Snapshot for the selected window only (matches iOS `BrowseModel.displayed`). */
+  displayed: Snapshot | null
   loading: boolean
   errorMessage: string | null
   refresh: () => Promise<void>
@@ -28,43 +37,61 @@ export function useBrowse(): BrowseState {
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const snapshotRef = useRef<Snapshot | null>(null)
+  const windowDaysRef = useRef(windowDays)
+  const fetchIdRef = useRef(0)
   snapshotRef.current = snapshot
+  windowDaysRef.current = windowDays
 
-  const refresh = useCallback(async () => {
+  const displayed = useMemo(
+    () => displayedSnapshot(snapshot, windowDays),
+    [snapshot, windowDays],
+  )
+
+  const loadForWindow = useCallback(async (days: WindowDays, force = false) => {
+    const fetchId = ++fetchIdRef.current
     setLoading(true)
     setErrorMessage(null)
-    const result = await refreshSnapshot(windowDays, snapshotRef.current)
+    const memory = snapshotRef.current
+    const compatibleMemory =
+      !force && memory?.windowDays === days ? memory : null
+    const result = await refreshSnapshot(days, compatibleMemory)
+    if (fetchId !== fetchIdRef.current) return
+    if (windowDaysRef.current !== days) return
     setSnapshot(result.snapshot)
     setErrorMessage(result.errorMessage)
     setLoading(false)
-  }, [windowDays])
+  }, [])
+
+  const refresh = useCallback(async () => {
+    await loadForWindow(windowDaysRef.current, true)
+  }, [loadForWindow])
 
   const refreshIfNeeded = useCallback(async () => {
-    const result = await refreshSnapshot(windowDays, snapshotRef.current)
+    const days = windowDaysRef.current
+    const memory = snapshotRef.current
+    const compatibleMemory = memory?.windowDays === days ? memory : null
+    const result = await refreshSnapshot(days, compatibleMemory)
+    if (windowDaysRef.current !== days) return
     if (result.snapshot !== snapshotRef.current || result.errorMessage !== errorMessage) {
       setSnapshot(result.snapshot)
       setErrorMessage(result.errorMessage)
     }
-  }, [windowDays, errorMessage])
+  }, [errorMessage])
 
   const setWindowDays = useCallback(
-    async (days: WindowDays) => {
-      if (days === windowDays) return
+    (days: WindowDays) => {
+      if (days === windowDaysRef.current) return
       localStorage.setItem(WINDOW_KEY, String(days))
-      setWindowDaysState(days)
       setLoading(true)
       setErrorMessage(null)
-      const result = await refreshSnapshot(days, null)
-      setSnapshot(result.snapshot)
-      setErrorMessage(result.errorMessage)
-      setLoading(false)
+      setWindowDaysState(days)
     },
-    [windowDays],
+    [],
   )
 
   useEffect(() => {
-    void refresh()
-  }, [refresh])
+    void loadForWindow(windowDays)
+  }, [windowDays, loadForWindow])
 
   useEffect(() => {
     const onVisible = () => {
@@ -79,7 +106,7 @@ export function useBrowse(): BrowseState {
   return {
     windowDays,
     setWindowDays,
-    snapshot,
+    displayed,
     loading,
     errorMessage,
     refresh,

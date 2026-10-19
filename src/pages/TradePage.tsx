@@ -71,8 +71,8 @@ function TradeRow({
 export function IssuerTradePage() {
   const { ticker = '' } = useParams()
   const browse = useOutletContext<BrowseState>()
-  const edition = browse.snapshot?.edition ?? ''
-  const windowDays = browse.snapshot?.windowDays ?? browse.windowDays
+  const edition = browse.displayed?.edition ?? ''
+  const windowDays = browse.displayed?.windowDays ?? browse.windowDays
   const query = useTrades(edition, windowDays, { ticker: decodeURIComponent(ticker) })
 
   if (!edition) {
@@ -126,8 +126,8 @@ export function IssuerTradePage() {
 export function PersonTradePage() {
   const { cik = '' } = useParams()
   const browse = useOutletContext<BrowseState>()
-  const edition = browse.snapshot?.edition ?? ''
-  const windowDays = browse.snapshot?.windowDays ?? browse.windowDays
+  const edition = browse.displayed?.edition ?? ''
+  const windowDays = browse.displayed?.windowDays ?? browse.windowDays
   const query = useTrades(edition, windowDays, { ownerCik: decodeURIComponent(cik) })
 
   if (!edition) {
